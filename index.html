@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal Linktree</title>
+    <!-- Menggunakan Font Inter agar terlihat modern dan elegan -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f8fafc; /* Warna latar belakang lembut */
+            --text-color: #0f172a; /* Warna teks gelap elegan */
+            --card-bg: #ffffff; /* Warna kotak link */
+            --card-hover: #f1f5f9; /* Warna saat kotak ditekuk/disentuh */
+            --accent-color: #6366f1; /* Warna aksen/garis (Indigo) */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* Container utama - Dioptimalkan untuk Mobile View */
+        .container {
+            width: 100%;
+            max-width: 480px; /* Standar ukuran maksimal mobile */
+            text-align: center;
+        }
+
+        /* Bagian Profil */
+        .profile {
+            margin-bottom: 32px;
+        }
+
+        .profile img {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-color);
+            margin-bottom: 16px;
+        }
+
+        .profile h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .profile p {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Bagian Grup Link / Konten */
+        .section-title {
+            text-align: left;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            margin: 24px 0 8px 4px;
+            font-weight: 600;
+        }
+
+        /* Tombol Link (Gaya Kotak Elegan) */
+        .link-card {
+            background-color: var(--card-bg);
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Efek saat ditekan/di-hover */
+        .link-card:active, .link-card:hover {
+            background-color: var(--card-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Icon di dalam kotak (opsional, jika nanti ingin ditambah) */
+        .link-card .icon {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .link-card .text {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .link-card .arrow {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 48px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- PROFIL -->
+        <div class="profile">
+            <!-- Ganti URL gambar di bawah ini dengan foto Anda nanti -->
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Foto Profil">
+            <h1>Nama Anda / Toko Anda</h1>
+            <p>Tulis deskripsi singkat atau slogan jualan Anda di sini secara menarik.</p>
+        </div>
+
+        <!-- KELOMPOK 1: KONTAK SAYA -->
+        <div class="section-title">Kontak Saya</div>
+        
+        <a href="#" class="link-card" target="_blank">
+            <span class="icon">💬</span>
+            <span class="text">WhatsApp Admin</span>
+            <span class="arrow">▶</span>
+        </a>
+
+        <a href="#" class="link-card" target="_blank">
+            <span class="icon">📸</span>
+            <span class="text">Instagram Resmi</span>
+            <span class="arrow">▶</span>
+        </a>
+
+
+        <!-- KELOMPOK 2: JUALAN SAYA -->
+        <div class="section-title">Jualan Saya</div>
+
+        <a href="#" class="link-card" target="_blank">
+            <span class="icon">🛍️</span>
+            <span class="text">Tokopedia</span>
+            <span class="arrow">▶</span>
+        </a>
+
+        <a href="#" class="link-card" target="_blank">
+            <span class="icon">🧡</span>
+            <span class="text">Shopee Toko</span>
+            <span class="arrow">▶</span>
+        </a>
+
+        <a href="#" class="link-card" target="_blank">
+            <span class="icon">📦</span>
+            <span class="text">Katalog Produk (PDF/Drive)</span>
+            <span class="arrow">▶</span>
+        </a>
+
+        <!-- FOOTER -->
+        <footer>
+            © 2026 NamaAnda. Powered by GitHub.
+        </footer>
+
+    </div>
+
+</body>
+</html>
