@@ -3,9 +3,14 @@
  * Berbasis Event Delegation, Reusable, dan Zero-Inline-Onclick.
  */
 
+// State Global untuk menyimpan data katalog sementara tanpa database
+let globalCatalogData = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     initThemeManager();
-    initInteractionsManager(); // Gabungan clipboard dan modal dinamis
+    initInteractionsManager();
+    initCatalogFetch();
+    initOrderFormLogic();
 });
 
 // ==========================================
@@ -54,26 +59,21 @@ function initInteractionsManager() {
         // --- FITUR 1: OPEN DYNAMIC MODAL QRIS ---
         const viewBtn = event.target.closest('.js-btn-view-qris');
         if (viewBtn) {
-            // Ambil semua data meta dari elemen tombol yang diklik
             const title = viewBtn.getAttribute('data-qris-title');
             const imgSrc = viewBtn.getAttribute('data-qris-src');
             const desc = viewBtn.getAttribute('data-qris-desc');
 
-            // Ambil elemen penampung di dalam modal tunggal
             const modalTitle = document.getElementById('dynamicModalTitle');
             const modalImg = document.getElementById('dynamicModalImg');
             const modalDesc = document.getElementById('dynamicModalDesc');
             const modalLoader = document.getElementById('modalLoader');
 
-            // Reset tampilan (tampilkan loader, sembunyikan gambar lama) sebelum memuat gambar baru
             modalLoader.classList.remove('d-none');
             modalImg.classList.add('d-none');
 
-            // Suntikkan teks ke dalam modal
             if (modalTitle) modalTitle.innerText = title;
             if (modalDesc) modalDesc.innerText = desc;
 
-            // Suntikkan gambar & hilangkan loader saat gambar selesai diunduh oleh browser
             if (modalImg) {
                 modalImg.src = imgSrc;
                 modalImg.onload = () => {
@@ -99,6 +99,20 @@ function initInteractionsManager() {
             const relativeUrl = qrisBtn.getAttribute('data-qris-src');
             const secureAbsoluteUrl = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + relativeUrl;
             executeCopy(secureAbsoluteUrl, "Link QRIS aman berhasil disalin!");
+        }
+
+        // --- FITUR 4: INTERSEPSI TOMBOL ORDER KATALOG ---
+        const orderBtn = event.target.closest('.js-btn-order-catalog');
+        if (orderBtn) {
+            event.preventDefault();
+            const productId = orderBtn.getAttribute('data-product-id');
+
+            const selectElement = document.getElementById('formProductSelect');
+            if (selectElement) {
+                selectElement.value = productId;
+                // Picu event 'change' manual agar fields form ikut ter-update otomatis
+                selectElement.dispatchEvent(new Event('change'));
+            }
         }
     });
 }
@@ -145,5 +159,241 @@ function showDynamicToast(message) {
 
     toastElement.addEventListener('hidden.bs.toast', () => {
         toastElement.remove();
+    });
+}
+
+// ==========================================
+// 4. MODULE: DYNAMIC CATALOG FETCH (JSON BASED)
+// ==========================================
+function initCatalogFetch() {
+    const container = document.getElementById('catalogContainer');
+    if (!container) return;
+
+    const jsonPath = 'assets/data/catalog.json';
+
+    fetch(jsonPath)
+        .then(response => {
+            if (!response.ok) throw new Error(`Status: ${response.status}`);
+            return response.json();
+        })
+        .then(products => {
+            globalCatalogData = products; // Simpan ke global state
+            container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted small py-3">Belum ada produk tersedia.</div>';
+                return;
+            }
+
+            // Isi Dropdown Options di Modal Order Form sekaligus
+            const selectElement = document.getElementById('formProductSelect');
+            if (selectElement) {
+                selectElement.innerHTML = products.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+            }
+
+            products.forEach(product => {
+                const cardHTML = `
+                  <div class="col-6">
+                    <div class="product-card">
+                      <div class="overflow-hidden">
+                        <img src="${product.img}" alt="${product.alt}" class="product-img" loading="lazy">
+                      </div>
+                      <div class="p-3 d-flex flex-column gap-1 flex-grow-1 justify-content-between">
+                        <div>
+                          <div class="product-title">${product.title}</div>
+                          <div class="product-price mt-1">${product.price}</div>
+                        </div>
+                        <button class="btn cta-button w-100 mt-2 js-btn-order-catalog" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#orderFormModal" 
+                                data-product-id="${product.id}">Order</button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching catalog:', error);
+            container.innerHTML = `<div class="col-12 text-center py-3"><span class="small text-danger">Gagal memuat katalog.</span></div>`;
+        });
+}
+
+// ==========================================
+// 5. MODULE: DYNAMIC ORDER FORM GENERATOR LOGIC
+// ==========================================
+function initOrderFormLogic() {
+    const selectElement = document.getElementById('formProductSelect');
+    const fieldsContainer = document.getElementById('dynamicFieldsContainer');
+    const orderForm = document.getElementById('dynamicOrderForm');
+
+    if (!selectElement || !fieldsContainer || !orderForm) return;
+
+    // Setiap kali pilihan item katalog diubah
+    selectElement.addEventListener('change', () => {
+        const selectedId = parseInt(selectElement.value);
+        const product = globalCatalogData.find(p => p.id === selectedId);
+
+        if (!product) return;
+
+        fieldsContainer.innerHTML = ''; // Reset form container
+
+        if (product.type === 'crypto') {
+            // Kita buat layout dasar dengan dropdown Beli/Jual dan sebuah container kosong di bawahnya
+            fieldsContainer.innerHTML = `
+              <div class="mb-2">
+                <label class="form-label small mb-1 fw-medium">Tipe Transaksi</label>
+                <select class="form-select form-select-sm" id="inputOrderType" required>
+                  <option value="">-- Pilih Aksi --</option>
+                  <option value="beli">Beli Crypto Eceran</option>
+                  <option value="jual">Jual / Cairkan Crypto</option>
+                </select>
+              </div>
+              <div id="cryptoSubFields"></div>
+            `;
+
+            const orderTypeSelect = document.getElementById('inputOrderType');
+            const cryptoSubFields = document.getElementById('cryptoSubFields');
+
+            // Jalankan logic dinamis di dalam sub-form Crypto
+            orderTypeSelect.addEventListener('change', () => {
+                cryptoSubFields.innerHTML = ''; // Reset sub-field setiap ganti tipe
+
+                if (orderTypeSelect.value === 'beli') {
+                    cryptoSubFields.innerHTML = `
+                      <div class="mb-2">
+                        <label class="form-label small mb-1 fw-medium">Nominal Pembelian</label>
+                        <input type="text" class="form-control form-control-sm" id="inputNominal" placeholder="ex: 10k IDR, 5 USDT, 0.002 BNB" required>
+                      </div>
+                      <div class="mb-2">
+                        <label class="form-label small mb-1 fw-medium">Metode Wallet / Penerimaan</label>
+                        <select class="form-select form-select-sm" id="inputWalletType" required>
+                          <option value="Self Wallet">Self Wallet (Trust Wallet, Metamask, dll)</option>
+                          <option value="Exchange">Exchange (Binance, Indodax, dll)</option>
+                        </select>
+                      </div>
+                      <div class="mb-2 d-none" id="exchangeNameWrapper">
+                        <label class="form-label small mb-1 fw-medium">Nama Exchange</label>
+                        <input type="text" class="form-control form-control-sm" id="inputExchangeName" placeholder="Masukkan nama Exchange beserta ID nya">
+                      </div>
+                    `;
+
+                    // Pemicu toggle input Exchange nama untuk opsi "Beli"
+                    const walletSelect = document.getElementById('inputWalletType');
+                    const exchangeWrapper = document.getElementById('exchangeNameWrapper');
+                    const exchangeInput = document.getElementById('inputExchangeName');
+
+                    walletSelect.addEventListener('change', () => {
+                        if (walletSelect.value === 'Exchange') {
+                            exchangeWrapper.classList.remove('d-none');
+                            exchangeInput.setAttribute('required', 'required');
+                        } else {
+                            exchangeWrapper.classList.add('d-none');
+                            exchangeInput.removeAttribute('required');
+                            exchangeInput.value = '';
+                        }
+                    });
+
+                } else if (orderTypeSelect.value === 'jual') {
+                    cryptoSubFields.innerHTML = `
+                      <div class="mb-2">
+                        <label class="form-label small mb-1 fw-medium">Nominal Penjualan</label>
+                        <input type="text" class="form-control form-control-sm" id="inputNominal" placeholder="Contoh: 10 USDT atau 0.005 BTC" required>
+                      </div>
+                      <div class="mb-2">
+                        <label class="form-label small mb-1 fw-medium">Tujuan Pencairan Saldo</label>
+                        <input type="text" class="form-control form-control-sm" id="inputTargetPayment" placeholder="Contoh: DANA (0851...) atau Bank BCA (9013...)" required>
+                      </div>
+                    `;
+                }
+            });
+
+        } else if (product.type === 'exchange_cv') {
+            fieldsContainer.innerHTML = `
+              <div class="mb-2">
+                <label class="form-label small mb-1 fw-medium">Nominal Convert</label>
+                <input type="text" class="form-control form-control-sm" id="inputNominal" placeholder="Contoh: 50 USDT" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small mb-1 fw-medium">Exchange & ID</label>
+                <input type="text" class="form-control form-control-sm" id="inputSourceExchange" placeholder="Contoh: Bitget, Binance | 123123123" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small mb-1 fw-medium">Tujuan Pencairan (IDR)</label>
+                <input type="text" class="form-control form-control-sm" id="inputTargetPayment" placeholder="Contoh: DANA, Bank BCA - 082113123123" required>
+              </div>
+            `;
+        } else {
+            // Tipe default (Paypal / Skrill)
+            fieldsContainer.innerHTML = `
+              <div class="mb-2">
+                <label class="form-label small mb-1 fw-medium">Tipe Aksi</label>
+                <select class="form-select form-select-sm" id="inputOrderType" required>
+                  <option value="">Pilih</option>
+                  <option value="Beli">Beli</option>
+                  <option value="Jual">Jual</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small mb-1 fw-medium">Jumlah Balance</label>
+                <input type="text" class="form-control form-control-sm" id="inputNominal" placeholder="Contoh: $10 atau Rp 150.000" required>
+              </div>
+            `;
+        }
+    });
+
+    // Handle Submit Form -> Kirim data terkompilasi ke WhatsApp
+    orderForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const selectedId = parseInt(selectElement.value);
+        const product = globalCatalogData.find(p => p.id === selectedId);
+        if (!product) return;
+
+        let messageText = `Halo Reactmore, saya ingin membuat pesanan:\n\n`;
+        messageText += `*Produk:* ${product.title}\n`;
+
+        if (product.type === 'crypto') {
+            const orderType = document.getElementById('inputOrderType').value;
+            const nominal = document.getElementById('inputNominal').value;
+
+            messageText += `*Tipe Transaksi:* ${orderType.toUpperCase()}\n`;
+            
+            if (orderType === 'beli') {
+                const walletType = document.getElementById('inputWalletType').value;
+                messageText += `*Nominal Pembelian:* ${nominal}\n`;
+                messageText += `*Metode Penerimaan:* ${walletType}\n`;
+                if (walletType === 'Exchange') {
+                    const exchangeName = document.getElementById('inputExchangeName').value;
+                    messageText += `*Nama Exchange:* ${exchangeName}\n`;
+                }
+            } else if (orderType === 'jual') {
+                const targetPayment = document.getElementById('inputTargetPayment').value;
+                messageText += `*Nominal Penjualan:* ${nominal}\n`;
+                messageText += `*Dikirim Ke (E-Wallet/Rekening):* ${targetPayment}\n`;
+            }
+
+        } else if (product.type === 'exchange_cv') {
+            const nominal = document.getElementById('inputNominal').value;
+            const source = document.getElementById('inputSourceExchange').value;
+            const target = document.getElementById('inputTargetPayment').value;
+
+            messageText += `*Nominal Convert:* ${nominal}\n`;
+            messageText += `*Asal Exchange:* ${source}\n`;
+            messageText += `*Pencairan Ke:* ${target}\n`;
+        } else {
+            const nominal = document.getElementById('inputNominal').value;
+            const orderType = document.getElementById('inputOrderType').value;
+            messageText += `*Tipe Aksi:* ${orderType}\n`;
+            messageText += `*Jumlah Balance:* ${nominal}\n`;
+        }
+
+        messageText += `\nMohon diinfokan stock dan langkah selanjutnya. Terima kasih!`;
+
+        // Jalankan redirect ke WhatsApp
+        const waNumber = "6285155092922";
+        const targetWaUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(messageText)}`;
+        window.open(targetWaUrl, '_blank');
     });
 }

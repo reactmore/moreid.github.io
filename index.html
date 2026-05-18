@@ -135,65 +135,10 @@
     </div>
 
     <div class="section-title">Katalog</div>
-    <div class="row g-2 mb-4">
-      <div class="col-6">
-        <div class="product-card">
-          <div class="overflow-hidden">
-            <img src="assets/images/catalogs/catalog_1.jpg" alt="paypal" class="product-img">
-          </div>
-          <div class="p-3 d-flex flex-column gap-1 flex-grow-1 justify-content-between">
-            <div>
-              <div class="product-title">Convert & Ecer Paypal Balance</div>
-              <div class="product-price mt-1">Mulai dari $1</div>
-            </div>
-            <a href="https://wa.me/6285155092922?text=Order%20Paypal%20Balance" class="btn cta-button w-100 mt-2" target="_blank">Order</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6">
-        <div class="product-card">
-          <div class="overflow-hidden">
-            <img src="assets/images/catalogs/catalog_2.jpg" alt="skrill" class="product-img">
-          </div>
-          <div class="p-3 d-flex flex-column gap-1 flex-grow-1 justify-content-between">
-            <div>
-              <div class="product-title">Convert & Ecer Skrill Balance</div>
-              <div class="product-price mt-1">Mulai dari $1</div>
-            </div>
-            <a href="https://wa.me/6285155092922?text=Order%20Skrill%20Balance" class="btn cta-button w-100 mt-2" target="_blank">Order</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6">
-        <div class="product-card">
-          <div class="overflow-hidden">
-            <img src="assets/images/catalogs/catalog_3.jpg" alt="crypto" class="product-img">
-          </div>
-          <div class="p-3 d-flex flex-column gap-1 flex-grow-1 justify-content-between">
-            <div>
-              <div class="product-title">Convert & Ecer Crypto</div>
-              <div class="product-price mt-1">Mulai dari Rp 10.000</div>
-            </div>
-            <a href="https://wa.me/6285155092922?text=Order%20Crypto%20Eceran" class="btn cta-button w-100 mt-2" target="_blank">Order</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6">
-        <div class="product-card">
-          <div class="overflow-hidden">
-            <img src="assets/images/catalogs/catalog_4.jpg" alt="exchange" class="product-img">
-          </div>
-          <div class="p-3 d-flex flex-column gap-1 flex-grow-1 justify-content-between">
-            <div>
-              <div class="product-title">Convert Exchange to IDR</div>
-              <div class="product-price mt-1">Mulai dari Rp 10.000</div>
-            </div>
-            <a href="https://wa.me/6285155092922?text=Order%20Convert%20Exchange" class="btn cta-button w-100 mt-2" target="_blank">Order</a>
-          </div>
-        </div>
+    <div class="row g-2 mb-4" id="catalogContainer">
+      <div class="col-12 text-center py-4">
+        <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+        <span class="small text-muted ms-2">Memuat katalog...</span>
       </div>
     </div>
 
@@ -214,6 +159,31 @@
           <img src="" alt="QRIS" id="dynamicModalImg" class="img-fluid rounded-3 border d-none">
           <div id="modalLoader" class="spinner-border text-success my-3" role="status"></div>
           <div class="small text-muted mt-2" id="dynamicModalDesc">---</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="orderFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm px-4">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 pb-0">
+          <h6 class="modal-title fw-bold">Form Pemesanan</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="dynamicOrderForm">
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Item Pembelian</label>
+              <select class="form-select form-select-sm" id="formProductSelect" required>
+              </select>
+            </div>
+
+            <div id="dynamicFieldsContainer"></div>
+
+            <button type="submit" class="btn cta-button w-100 mt-2">ORDER</button>
+          </form>
         </div>
       </div>
     </div>
